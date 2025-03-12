@@ -70,11 +70,11 @@ class ChatEngine:
             if len(doc_item.reference_who) == 0:
                 return ""
             prompt = [
-                """As you can see, the code calls the following objects, their code and docs are as following:"""
+                """如你所见，该代码调用了以下对象，其代码和文档如下："""
             ]
             for reference_item in doc_item.reference_who:
                 instance_prompt = (
-                    f"""obj: {reference_item.get_full_name()}\nDocument: \n{reference_item.md_content[-1] if len(reference_item.md_content) > 0 else 'None'}\nRaw code:```\n{reference_item.content['code_content'] if 'code_content' in reference_item.content.keys() else ''}\n```"""
+                    f"""对象: {reference_item.get_full_name()}\n文档: \n{reference_item.md_content[-1] if len(reference_item.md_content) > 0 else '无'}\n原始代码:```\n{reference_item.content['code_content'] if 'code_content' in reference_item.content.keys() else ''}\n```"""
                     + "=" * 10
                 )
                 prompt.append(instance_prompt)
@@ -84,11 +84,11 @@ class ChatEngine:
             if len(doc_item.who_reference_me) == 0:
                 return ""
             prompt = [
-                """Also, the code has been called by the following objects, their code and docs are as following:"""
+                """此外，该代码被以下对象调用，其代码和文档如下："""
             ]
             for referencer_item in doc_item.who_reference_me:
                 instance_prompt = (
-                    f"""obj: {referencer_item.get_full_name()}\nDocument: \n{referencer_item.md_content[-1] if len(referencer_item.md_content) > 0 else 'None'}\nRaw code:```\n{referencer_item.content['code_content'] if 'code_content' in referencer_item.content.keys() else 'None'}\n```"""
+                    f"""对象: {referencer_item.get_full_name()}\n文档: \n{referencer_item.md_content[-1] if len(referencer_item.md_content) > 0 else '无'}\n原始代码:```\n{referencer_item.content['code_content'] if 'code_content' in referencer_item.content.keys() else '无'}\n```"""
                     + "=" * 10
                 )
                 prompt.append(instance_prompt)
@@ -96,27 +96,21 @@ class ChatEngine:
 
         def get_relationship_description(referencer_content, reference_letter):
             if referencer_content and reference_letter:
-                return "And please include the reference relationship with its callers and callees in the project from a functional perspective"
+                return "并请从功能角度包含其在项目中的调用者与被调用者的引用关系。"
             elif referencer_content:
-                return "And please include the relationship with its callers in the project from a functional perspective."
+                return "并请从功能角度包含其在项目中的调用者关系。"
             elif reference_letter:
-                return "And please include the relationship with its callees in the project from a functional perspective."
+                return "并请从功能角度包含其在项目中的被调用者关系。"
             else:
                 return ""
 
-        code_type_tell = "Class" if code_type == "ClassDef" else "Function"
-        parameters_or_attribute = (
-            "attributes" if code_type == "ClassDef" else "parameters"
-        )
+        code_type_tell = "类" if code_type == "ClassDef" else "函数"
+        parameters_or_attribute = "属性" if code_type == "ClassDef" else "参数"
         have_return_tell = (
-            "**Output Example**: Mock up a possible appearance of the code's return value."
-            if have_return
-            else ""
+            "**输出示例**: 模拟代码返回值可能的形式。" if have_return else ""
         )
         combine_ref_situation = (
-            "and combine it with its calling situation in the project,"
-            if referenced
-            else ""
+            "并结合其在项目中的调用情况，" if referenced else ""
         )
 
         referencer_content = get_referencer_prompt(doc_item)
@@ -125,7 +119,7 @@ class ChatEngine:
             referencer_content, reference_letter
         )
 
-        project_structure_prefix = ", and the related hierarchical structure of this project is as follows (The current object is marked with an *):"
+        project_structure_prefix = "，并且该项目的相关层次结构如下（当前对象用 * 标记）："
 
         return chat_template.format_messages(
             combine_ref_situation=combine_ref_situation,
