@@ -1,10 +1,47 @@
-from llama_index.llms.openai_like import OpenAILike
+from llama_index.core.base.llms.types import ChatMessage
 
 from repo_agent.doc_meta_info import DocItem
 from repo_agent.log import logger
 from repo_agent.prompt import chat_template
 from repo_agent.settings import SettingsManager
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from loguru import logger
+from pathlib import Path
+import os
 
+
+
+class LocalModelWrapper:
+    def __init__(self, model_name: str):
+        """
+        初始化时加载 transformers 模型和分词器
+        """
+        self.model_name = model_name
+        self.generator = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", trust_remote_code=True).eval()
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+
+    def chat(self, messages: list[ChatMessage]):
+        """
+        实现 chat 方法，接收 List[ChatMessage]，返回类似 OpenAI 接口的响应格式
+
+        参数:
+            messages: List[ChatMessage] —— 包含对话历史，每条消息包含 role 与 content 属性
+
+        返回:
+            一个字典，包含生成的文本和 token 使用信息
+        """
+        # 拼接对话历史为一个 prompt 字符串
+        prompt = "".join([f"{msg.role}: {msg.content}\n" for msg in messages])
+
+        logger.debug(f"Combined prompt: {prompt}")
+
+        try:
+            # 计算 prompt token 数量
+            response, history = self.generator.chat(self.tokenizer, prompt, history=None)
+            return response
+        except Exception as e:
+            logger.error(f"Error in chat call: {e}")
+            raise
 
 class ChatEngine:
     """
@@ -14,15 +51,7 @@ class ChatEngine:
     def __init__(self, project_manager):
         setting = SettingsManager.get_setting()
 
-        self.llm = OpenAILike(
-            api_key=setting.chat_completion.openai_api_key.get_secret_value(),
-            api_base=setting.chat_completion.openai_base_url,
-            timeout=setting.chat_completion.request_timeout,
-            model=setting.chat_completion.model,
-            temperature=setting.chat_completion.temperature,
-            max_retries=1,
-            is_chat_model=True,
-        )
+        self.llm = LocalModelWrapper(setting.chat_completion.model)
 
     def build_prompt(self, doc_item: DocItem):
         """Builds and returns the system and user prompts based on the DocItem."""
@@ -119,14 +148,7 @@ class ChatEngine:
 
         try:
             response = self.llm.chat(messages)
-            logger.debug(f"LLM Prompt Tokens: {response.raw.usage.prompt_tokens}")  # type: ignore
-            logger.debug(
-                f"LLM Completion Tokens: {response.raw.usage.completion_tokens}"  # type: ignore
-            )
-            logger.debug(
-                f"Total LLM Token Count: {response.raw.usage.total_tokens}"  # type: ignore
-            )
-            return response.message.content
+            return response
         except Exception as e:
             logger.error(f"Error in llamaindex chat call: {e}")
             raise
