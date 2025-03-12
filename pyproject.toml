@@ -18,6 +18,12 @@ dependencies = [
     "python-iso639>=2024.10.22",
     "colorama>=0.4.6",
     "llama-index-llms-openai-like>=0.3.3",
+    "torch>=2.6.0",
+    "torchvision>=0.21.0",
+    "transformers>=4.49.0",
+    "transformers-stream-generator>=0.0.5",
+    "einops>=0.8.1",
+    "accelerate>=1.4.0",
 ]
 name = "repoagent"
 version = "0.2.0"
@@ -70,4 +76,17 @@ lint = [
 [tool.pdm.build]
 includes = [
     "repo_agent",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cu124", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchvision = [
+  { index = "pytorch-cu124", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
