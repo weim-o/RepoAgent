@@ -48,7 +48,7 @@ def handle_setting_error(e: ValidationError):
 @click.option(
     "--model",
     "-m",
-    default="gpt-4o-mini",
+    default="Qwen-7B-Chat",
     show_default=True,
     help="Specifies the model to use for completion.",
     type=str,
@@ -110,7 +110,7 @@ def handle_setting_error(e: ValidationError):
 @click.option(
     "--language",
     "-l",
-    default="English",
+    default="Chinese",
     show_default=True,
     help="The ISO 639 code or language name for the documentation. ",
     type=str,
