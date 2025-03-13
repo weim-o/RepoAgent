@@ -60,7 +60,6 @@ class ChatCompletionSettings(BaseSettings):
     temperature: PositiveFloat = 0.2
     request_timeout: PositiveInt = 60
     openai_base_url: str = "https://api.openai.com/v1"
-    openai_api_key: SecretStr = Field(..., exclude=True)
 
     @field_validator("openai_base_url", mode="before")
     @classmethod
