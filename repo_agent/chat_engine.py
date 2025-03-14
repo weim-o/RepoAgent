@@ -21,23 +21,31 @@ class LocalModelWrapper:
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 
     def chat(self, messages: list[ChatMessage]):
-        """
-        实现 chat 方法，接收 List[ChatMessage]，返回类似 OpenAI 接口的响应格式
+        msgs = [{
+            "role": msg.role.name.lower(),
+            "content": msg.content
+        } for msg in messages]
+        text = self.tokenizer.apply_chat_template(
+            msgs,
+            tokenize=False,
+            add_generation_prompt=True
+        )
+        model_inputs = self.tokenizer([text], return_tensors="pt").to(self.generator.device)
 
-        参数:
-            messages: List[ChatMessage] —— 包含对话历史，每条消息包含 role 与 content 属性
+        generated_ids = self.generator.generate(
+            **model_inputs,
+            max_new_tokens=512
+        )
+        generated_ids = [
+            output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+        ]
 
-        返回:
-            一个字典，包含生成的文本和 token 使用信息
-        """
-        # 拼接对话历史为一个 prompt 字符串
-        prompt = "".join([f"{msg.role}: {msg.content}\n" for msg in messages])
 
-        logger.debug(f"Combined prompt: {prompt}")
+        logger.debug(f"llm prompt: {msgs}")
 
         try:
             # 计算 prompt token 数量
-            response, history = self.generator.chat(self.tokenizer, prompt, history=None)
+            response = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
             logger.debug(f"response: {response}")
             return response
         except Exception as e:
