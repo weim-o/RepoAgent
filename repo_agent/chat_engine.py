@@ -38,6 +38,7 @@ class LocalModelWrapper:
         try:
             # 计算 prompt token 数量
             response, history = self.generator.chat(self.tokenizer, prompt, history=None)
+            logger.debug(f"response: {response}")
             return response
         except Exception as e:
             logger.error(f"Error in chat call: {e}")
