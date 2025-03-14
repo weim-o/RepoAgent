@@ -34,7 +34,7 @@ doc_generation_instruction = (
 documentation_guideline = (
     "请牢记，你的读者是文档使用者，因此请使用确定性的语气生成精准的内容，"
     "不要让他们察觉到你是基于代码片段和文档生成的。避免任何推测和不准确的描述！"
-    "现在，请以专业的方式使用 {language} 生成目标对象的文档。"
+    "现在，请以专业的方式使用 中文 生成目标对象的文档。"
 )
 
 message_templates = [
